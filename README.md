@@ -10,9 +10,9 @@ Budeme používat několik komponentů:
   <li>Mozek všeho raspberry pi zeroWH - <a href="https://rpishop.cz/raspberry-pi-zero/685-raspberry-pi-zero-wh-4250236816296.html?gad_source=1&gclid=EAIaIQobChMIn8uG2eLtggMViIKDBx0NCALqEAQYASABEgIbhfD_BwE">RPIShop</a><ul>
   <li>W značí že obsahuje čip na bezdrátové rozhraní</li>
   <li>H značí předem instalovaný header</li>
-  <li><img src="https://rpishop.cz/2519-large_default/raspberry-pi-zero-wh.jpg"/></li>  
+  <img src="https://rpishop.cz/2519-large_default/raspberry-pi-zero-wh.jpg" width=500px;/>
   </ul></li>
-  <li>Nfc/rfid čtečka na karty</li>
+  <li>Nfc/Rfid čtečka na karty</li>
   <li>Senzor světla <ul>
     <li>Budeme nejspíš používat TCRT5000 - <a href="https://pdf1.alldatasheet.com/datasheet-pdf/download/26406/VISHAY/TCRT5000.html">DATASHEET</a></li>
     <li>používá se jako senzor ke kontrole zda jsou krabičky uloženy či nikoliv</li>
@@ -20,3 +20,9 @@ Budeme používat několik komponentů:
   </li>
   <li>Individuálně adresovatelné diody WS2812B k navigaci kam vracet krabičky<a href="https://pdf1.alldatasheet.com/datasheet-pdf/download/1179113/WORLDSEMI/WS2812B.html">DATASHEET</a> </li>
 </ol>
+
+## Progress update:
+<ul>
+  <li>30.12.23- objednáno Raspberry</li>
+  <li>- objední zbytku</li>
+</ul>
