@@ -23,6 +23,10 @@ Budeme používat několik komponentů:
 
 ## Progress update:
 <ul>
-  <li>30.12.23- objednáno Raspberry</li>
-  <li>- objední zbytku</li>
+  <li>30.11.23- Objednáno RaspberryPi Zero W</li>
+  <li>15.12.23- Objední zbytku</li>
+  <li>26.12.23- Funkční systém se čtečkou nfc a jedním senzorem</li>
+  <li>02.01.24- Funkční systém se základním výpisem na server a psaní data logu do .txt</li>
+  <li>04.01.24- Všechno přišlo</li>
+  
 </ul>
