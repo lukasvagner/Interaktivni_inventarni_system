@@ -15,8 +15,12 @@ file.write("Booted at: " + asctime(localtime()))
 file.close()
 
 i2c = busio.I2C(board.SCL, board.SDA)
-led = 27
-GPIO.setup(led, GPIO.OUT)
+GPIO.setmode(GPIO.BCM)
+R_led = 27
+G_led = 22
+
+GPIO.setup(R_led, GPIO.OUT)
+GPIO.setup(G_led, GPIO.OUT)
 
 uidSave = None
 cardTime = time()
@@ -48,11 +52,13 @@ def check_card():
     if uid is None:
         if time() - cardTime > logoutTime:
             uidSave = None
+            GPIO.output(G_led, False)
         return uidSave
      
     print("Found card with UID:", [hex(i) for i in uid])
     cardTime = time() 
     uidSave = uid
+    GPIO.output(G_led, True)
     return uid
 
 def check_change(uid):
@@ -65,10 +71,10 @@ def check_change(uid):
                     timeBefore = time()
                     while True:
                         print(". ")
-                        GPIO.output(led, True)
+                        GPIO.output(R_led, True)
                         uid = check_card()
                         if uid is not None:
-                                GPIO.output(led, False)
+                                GPIO.output(R_led, False)
                                 break
                         if time() - timeBefore > 10:
                             print("STOLEN")
@@ -79,6 +85,7 @@ def check_change(uid):
                             return
                 DATA[i][2] = ''.join([format(byte, '02x') for byte in uid])
                 DATA[i][3] = asctime(localtime())
+                GPIO.output(R_led, False)
                 log(f"Box {i + 1} borrowed by: {DATA[i][2]} at {DATA[i][3]}")
                 oldDATA[i][1] = DATA[i][1]
             else:
@@ -103,7 +110,9 @@ def main():
         print(tabulate(table_data, headers=head))
         print("")
 
+#The main thread is used to check the boxes and the card
 main_thread = threading.Thread(target=main)
+#The flask thread is used to run the flask server
 flask_thread = threading.Thread(target=run_flask)
 flask_thread.start()
 main_thread.start()
@@ -111,10 +120,11 @@ main_thread.start()
 @app.route('/')
 def index():
     table_data = copy.deepcopy(DATA)
-    return render_template('index.html', table_data=table_data, headers=head)
+    uidR= uidSave
+    return render_template('index.html', table_data=table_data, headers=head, uid=uidR)
 
 
 if __name__ == '__main__':
     while True:
         sleep(1)
-        # Additional processing can be added here in the main thread
+        

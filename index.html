@@ -2,19 +2,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="../static/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Inventory System</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Box Status</title>
 </head>
 <body>
-    <h1>My Inventory System</h1>
-    <table>
-        <tr>
-            <th>D</th>
-            <th>Quantity</th>
-            <th>Price</th>
-        </tr>
-
+    <h1>Box Status</h1>
+    <table border="2">
+        <thead>
+            <tr>
+                {% for header in headers %}
+                    <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in table_data %}
+                <tr>
+                    {% for item in row %}
+                        <td>{{ item }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
     </table>
+    <h1>Curently active card:{{uid}}</h2>
 </body>
 </html>
