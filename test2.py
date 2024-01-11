@@ -7,15 +7,27 @@ from time import sleep, time, localtime, asctime
 from tabulate import tabulate
 import copy
 from flask import Flask, render_template
+from pcf8575 import PCF8575
+import neopixel
+
+
+
+
+#pcf8575 setup
+pcf_address = 0x20
+i2c_port_num = 1
+pcf = PCF8575(i2c_port_num, pcf_address)
+
 
 app = Flask(__name__)
-
+#log file setup + boot time
 file = open("log.txt", "a")
 file.write("Booted at: " + asctime(localtime()))
 file.close()
 
 i2c = busio.I2C(board.SCL, board.SDA)
 GPIO.setmode(GPIO.BCM)
+#leds setup
 R_led = 27
 G_led = 22
 
@@ -26,12 +38,16 @@ uidSave = None
 cardTime = time()
 logoutTime = 10
 head = ["pin", "status", "uid", "time"]
-DATA = [[4, False, "", ""], [17, False, "", ""]]
+
+#set all available docks
+DATA = [[0, False, "", "",[]], [1, False, "", ""]]
+#copy of the data to check if the status of the boxes changed
 oldDATA = copy.deepcopy(DATA)
 
-GPIO.setup(4, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+#neopixel setup
+pixels = neopixel.NeoPixel(board.D18, len(DATA), brightness=0.2)
 
+#setup of the pn532
 pn532 = PN532_I2C(i2c, debug=False)
 ic, ver, rev, support = pn532.firmware_version
 pn532.SAM_configuration()
@@ -39,12 +55,22 @@ pn532.SAM_configuration()
 def run_flask():
     app.run(debug=True, use_reloader=False, host='0.0.0.0', port=80)
 
+def box_colors():
+    for i in range(len(DATA)):
+        if DATA[i][1] == True:
+            pixels[i] = (0, 255, 0)
+        elif DATA[i][2] == "STOLEN":
+            pixels[i] = (255, 0, 0)
+        else: 
+            pixels[i] = (0, 0, 255)
+
+def return_box():
 
 
 def check_boxes():
     for i in range(len(DATA)):
         box_pin = DATA[i][0]
-        DATA[i][1] = GPIO.input(box_pin) == GPIO.HIGH
+        DATA[i][1] = pcf.port[box_pin]  == True
 
 def check_card():
     global uidSave, cardTime
@@ -104,6 +130,7 @@ def main():
     while True:
         sleep(1)
         check_boxes()
+        box_colors()
         uidSave = check_card()
         check_change(uidSave)
         table_data = copy.deepcopy(DATA)

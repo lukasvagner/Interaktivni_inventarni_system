@@ -22,7 +22,8 @@ uidSave = None
 cardTime = time()
 logoutTime = 10
 head = ["pin", "status", "uid", "time"]
-DATA = [[4, False, "", ""], [17, False, "", ""]]
+DATA = [[4, False, "", ""],
+        [17, False, "", ""]]
 
 # [pin, status, uid]
 oldDATA = copy.deepcopy(DATA)  # Initialize oldDATA for the first time and same structure as DATA
