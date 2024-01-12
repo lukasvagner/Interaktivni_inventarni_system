@@ -20,6 +20,18 @@ Budeme používat několik komponentů:
   </li>
   <li>Individuálně adresovatelné diody WS2812B k navigaci kam vracet krabičky<a href="https://pdf1.alldatasheet.com/datasheet-pdf/download/1179113/WORLDSEMI/WS2812B.html">DATASHEET</a> </li>
 </ol>
+ 
+## Funkčnost
+Po přiložení karty načtená karta na 5s v této době si můžete vzít co chcete a bude ulozeno id karty pro případné problémy.
+Při vracení karta neni potřeba jen načtete rfid chip na boxu a vložíte box na místo kde bliká led.
+### Stavy
+<ul>
+<li>zelená: Box na svém místě</li>
+<li>červená: Box ukraden nebo vložen na špatné místo</li>
+<li>modrá: Box vypůjčen správně</li>
+<li>oranžová: Box vypůjčen zatím není nahrána karta je tam čas 10sna to ji nahrát</li>
+<li>blikající oranžová: Značí na jaké místo box vrátit</li> 
+</ul>
 
 ## Progress update:
 <ul>
