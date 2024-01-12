@@ -18,8 +18,8 @@ pcf_address = 0x20
 i2c_port_num = 1
 pcf = PCF8575(i2c_port_num, pcf_address)
 
-
 app = Flask(__name__)
+
 #log file setup + boot time
 file = open("log.txt", "a")
 file.write("Booted at: " + asctime(localtime()))
@@ -36,18 +36,32 @@ GPIO.setup(G_led, GPIO.OUT)
 
 uidSave = None
 cardTime = time()
-logoutTime = 10
-head = ["pin", "status", "uid", "time"]
+logoutTime = 4
+head = ["pin", "status", "uid", "time","Returned correctly"]
+sleep(0.5)
+file = open("save.txt", "w+")
 
-#set all available docks
-DATA = [[0, False, "", "",[]], [1, False, "", ""]]
+if file.read() == "":    
+    #set all available docks
+    print("No save file found")
+    
+    sleep(1)
+    DATA = [[0, False, "", "",True,['0x4', '0x92', '0x9c', '0x4b', '0x11', '0x1', '0x89']],
+            [1, False, "", "",True,['0x4', '0xa6', '0x51', '0x4b', '0x11', '0x1', '0x89']],
+            [2, False, "", "",True,['0x4', '0x71', '0xef', '0x4e', '0x11', '0x1', '0x89']]]
+    file.write (str(DATA))
+else: 
+    DATA = eval(file.read())
+file.close()
+print (DATA)
+
 #copy of the data to check if the status of the boxes changed
 oldDATA = copy.deepcopy(DATA)
 
 #neopixel setup
 pixels = neopixel.NeoPixel(board.D18, len(DATA), brightness=0.2)
-
-#setup of the pn532
+sleep(0.5)
+#setup of the pn532 
 pn532 = PN532_I2C(i2c, debug=False)
 ic, ver, rev, support = pn532.firmware_version
 pn532.SAM_configuration()
@@ -58,14 +72,27 @@ def run_flask():
 def box_colors():
     for i in range(len(DATA)):
         if DATA[i][1] == True:
-            pixels[i] = (0, 255, 0)
+            if DATA[i][4] == True:
+                pixels[i] = (0, 255, 0)
+            else:    
+                pixels[i] = (255, 0, 0)
         elif DATA[i][2] == "STOLEN":
             pixels[i] = (255, 0, 0)
         else: 
             pixels[i] = (0, 0, 255)
 
-def return_box():
-
+def return_box(i):
+    return_time = time()
+    
+    while pcf.port[DATA[i][0]] == False:
+        pixels[i] = (255, 255, 0)
+        sleep(0.2)
+        pixels[i] = (0, 0, 0)
+        sleep(0.2)
+        if time() - return_time > 4:
+            break
+    DATA[i][4] = True
+    check_change(uidSave, i)
 
 def check_boxes():
     for i in range(len(DATA)):
@@ -74,20 +101,32 @@ def check_boxes():
 
 def check_card():
     global uidSave, cardTime
+    pn532.SAM_configuration() #set again in case the power was out for a second
     uid = pn532.read_passive_target(timeout=0.5)
     if uid is None:
         if time() - cardTime > logoutTime:
             uidSave = None
             GPIO.output(G_led, False)
         return uidSave
-     
-    print("Found card with UID:", [hex(i) for i in uid])
-    cardTime = time() 
-    uidSave = uid
-    GPIO.output(G_led, True)
-    return uid
+    
+    dontSave = False
+    for i in range(len(DATA)):
+        if  [hex(i) for i in uid] == DATA[i][5]:
+            print("This card is a box")
+            return_box(i)
+            dontSave = True
+            return None         
+    if dontSave == False:
+        print("Found card with UID:", [hex(i) for i in uid])
+        cardTime = time() 
+        uidSave = uid
+        GPIO.output(G_led, True)
+        return uid
 
-def check_change(uid):
+
+
+def check_change(uid, returned_corectly):
+    check_boxes()
     for i in range(len(DATA)):
         if oldDATA[i][1] != DATA[i][1]:
             if DATA[i][1] == False:
@@ -99,6 +138,7 @@ def check_change(uid):
                         print(". ")
                         GPIO.output(R_led, True)
                         uid = check_card()
+                        pixels[i] = (255, 255, 0)
                         if uid is not None:
                                 GPIO.output(R_led, False)
                                 break
@@ -111,15 +151,25 @@ def check_change(uid):
                             return
                 DATA[i][2] = ''.join([format(byte, '02x') for byte in uid])
                 DATA[i][3] = asctime(localtime())
+                DATA[i][4] = False
                 GPIO.output(R_led, False)
                 log(f"Box {i + 1} borrowed by: {DATA[i][2]} at {DATA[i][3]}")
                 oldDATA[i][1] = DATA[i][1]
+            elif DATA[i][1] == True and returned_corectly == i:
+                    DATA[i][2] = "RETURNED by:"+ DATA[i][2]
+                    print(f"Box {i + 1} returned")
+                    
+                    DATA[i][3] = asctime(localtime())
+                    DATA[i][4] = True
+                    log(f"Box {i + 1} returned by: {DATA[i][2]} at {DATA[i][3]}")
+                    oldDATA[i][1] = DATA[i][1]
             else:
-                DATA[i][2] = "RETURNED by:"+ DATA[i][2]
-                print(f"Box {i + 1} returned")
+                print(f"Box {i + 1} returned incorrectly")
                 oldDATA[i][1] = DATA[i][1]
-                log(f"Box {i + 1} returned by: {DATA[i][2]} at {DATA[i][3]}")
                 DATA[i][3] = asctime(localtime())
+                DATA[i][4] = False
+                log(f"Box {i + 1} returned incorrectly at {DATA[i][3]}")
+                
 
 def log(data):
     file = open("log.txt", "a")
@@ -128,13 +178,13 @@ def log(data):
 
 def main():
     while True:
-        sleep(1)
-        check_boxes()
+        sleep(0.2)
         box_colors()
         uidSave = check_card()
-        check_change(uidSave)
+        check_change(uidSave, None)
         table_data = copy.deepcopy(DATA)
-        print(tabulate(table_data, headers=head))
+        table_data_trimed = [row[:-1] for row in DATA]
+        print(tabulate(table_data_trimed, headers=head,tablefmt="grid"))
         print("")
 
 #The main thread is used to check the boxes and the card
