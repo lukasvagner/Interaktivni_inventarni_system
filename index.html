@@ -5,8 +5,16 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link rel="stylesheet" href="../static/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <title>Box Status</title>
 </head>
+
+<style>
+    .stolen {
+        background-color: red;
+    }
+</style>
+
 <body>
     <h1>Box Status</h1>
     <table border="2">
@@ -15,18 +23,41 @@
                 {% for header in headers %}
                     <th>{{ header }}</th>
                 {% endfor %}
+                <th>Actions</th> <!-- Add a new header for actions -->
             </tr>
         </thead>
         <tbody>
             {% for row in table_data %}
+                {% if row[2] == "STOLEN" %}
+                    <tr class="stolen">
+                {% elif row[4] == "False" %}       
+                    <tr class="stolen"> 
+                {% else %}
+
                 <tr>
+                {% endif %}
                     {% for item in row %}
                         <td>{{ item }}</td>
                     {% endfor %}
+                    <td> <!-- Actions column -->
+                        <form action="/reset_stolen_status" method="post">
+                            <input type="hidden" name="box_id" value="{{ loop.index0 }}">
+                            <button type="submit">Reset Status</button>
+                        </form>
+                        <form action="/find_box" method="post">
+                            <input type="hidden" name="box_id" value="{{ loop.index0 }}">
+                            <button type="submit">Ping Box</button>
+                        </form>
+                        <form action="/update_box_name" method="post">
+                            <input type="hidden" name="box_id" value="{{ loop.index0 }}">
+                            <input type="text" name="new_name" placeholder="Enter new name">
+                            <button type="submit">Update Name</button>
+                        </form>
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
-    <h1>Curently active card:{{uid}}</h2>
+    <h1>Currently active card: {{ uid }}</h1>
 </body>
 </html>
